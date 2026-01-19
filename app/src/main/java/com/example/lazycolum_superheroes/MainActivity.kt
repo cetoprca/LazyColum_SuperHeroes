@@ -44,20 +44,27 @@ class MainActivity : ComponentActivity() {
 
            LazyColumn_SuperHeroes_composeTheme {
 
-                val superheroeViewModel: SuperHeroeViewModel = viewModel()
-
-                //statusBarPadding() deja la barra de estado libre para que
-                //no se aplique el color del TopBar
-                Scaffold(modifier = Modifier.fillMaxSize().statusBarsPadding(), topBar ={ TopAppBar_Normal(Modifier)}, bottomBar = {BottomNavigationBar_SuperHeroe()}) { innerPadding ->
-                    ZonaCentral(Modifier.padding(innerPadding),superheroeViewModel.superHeroes){
-                        superheroeViewModel.borrarHeroe(it)
-                    }
-                }
+              Pantalla()
             }
         }
     }
 }
 
+
+@Composable
+fun Pantalla()
+{
+    val superheroeViewModel: SuperHeroeViewModel = viewModel()
+
+    //statusBarPadding() deja la barra de estado libre para que
+    //no se aplique el color del TopBar
+
+    Scaffold(modifier = Modifier.fillMaxSize().statusBarsPadding(), topBar ={ TopAppBar_Normal(Modifier)}, bottomBar = {BottomNavigationBar_SuperHeroe()}) { innerPadding ->
+        ZonaCentral(Modifier.padding(innerPadding),superheroeViewModel.superHeroes){
+            superheroeViewModel.borrarHeroe(it)
+        }
+    }
+}
 
 
 @Composable
