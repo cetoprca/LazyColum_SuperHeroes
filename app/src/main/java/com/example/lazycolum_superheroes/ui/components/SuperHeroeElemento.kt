@@ -2,6 +2,7 @@ package com.example.recycler_superheroes_compose.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 
@@ -41,10 +42,15 @@ import java.nio.file.WatchEvent
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
-fun ElementoLazySuperHeroe(misuperheroe: SuperHeroe, modificador: Modifier= Modifier, click_borrar:()->Unit)
+fun ElementoLazySuperHeroe(misuperheroe: SuperHeroe, modificador: Modifier= Modifier,selecionado:()->Boolean, click_borrar:()->Unit,click_largo:()->Unit,click_corto:()->Unit)
 {
-    Card(modifier = modificador.padding(vertical = 4.dp, horizontal = 8.dp).height(160.dp).fillMaxWidth(), RoundedCornerShape(8.dp), elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)){
-        Row (modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.secondary), verticalAlignment = Alignment.CenterVertically){
+
+    val color_fondo=if(selecionado()) MaterialTheme.colorScheme.secondary.copy(alpha = 0.3f) else MaterialTheme.colorScheme.secondary
+
+    Card(modifier = modificador.combinedClickable(onLongClick = click_largo, onClick =click_corto ).padding(vertical = 4.dp, horizontal = 8.dp).height(160.dp).fillMaxWidth(),
+        RoundedCornerShape(8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)){
+        Row (modifier = Modifier.fillMaxWidth().background(color_fondo), verticalAlignment = Alignment.CenterVertically){
 
             GlideImage(misuperheroe.foto, modifier = Modifier.size(DpSize(150.dp,150.dp)).padding(start = 4.dp), contentDescription = "")
             Spacer(Modifier.width(8.dp))
@@ -68,5 +74,14 @@ fun ElementoLazySuperHeroe(misuperheroe: SuperHeroe, modificador: Modifier= Modi
 @Composable
 fun mostrar_elementoLazy()
 {
-    ElementoLazySuperHeroe(SuperHeroe("Spiderman","Marvel","Peter Parker","https://cursokotlin.com/wp-content/uploads/2017/07/spiderman.jpg")){}
+    ElementoLazySuperHeroe(
+        SuperHeroe(
+        "Spiderman",
+        "Marvel",
+        "Peter Parker",
+        "https://cursokotlin.com/wp-content/uploads/2017/07/spiderman.jpg"
+    ), click_corto = {}, click_largo = {}, click_borrar = {},
+
+        selecionado = {true}
+    )
 }

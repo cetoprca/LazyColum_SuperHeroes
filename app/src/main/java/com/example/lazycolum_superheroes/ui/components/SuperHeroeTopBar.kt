@@ -3,6 +3,10 @@ package com.example.recycler_superheroes_compose.ui.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.DropdownMenu
@@ -23,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,6 +49,32 @@ fun TopAppBar_Normal(modificador: Modifier= Modifier)
             actionIconContentColor = MaterialTheme.colorScheme.onSecondary
     ),
        )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TopAppBar_ActionMode(modificador: Modifier= Modifier,elementos_seleccionados:Int,click_atras:()->Unit,click_eliminar:()->Unit,click_editar: ()->Unit)
+{
+    TopAppBar(
+        title = {Text("Elementos seleccionados $elementos_seleccionados", fontSize = 16.sp)},
+        navigationIcon = {
+            IconButton(onClick = click_atras) {
+                Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Salir")
+            }
+        },
+        actions = {
+            if(elementos_seleccionados==1) {//Hay solo hay un elemento seleccionado añado el Edit
+                IconButton(onClick =click_editar) {
+                    Icon(imageVector = Icons.Default.Edit, contentDescription = "Editar")
+                }
+            }
+
+                IconButton(onClick = click_eliminar) {
+                    Icon(imageVector = Icons.Default.Delete, contentDescription = "Eliminar")
+                }
+
+        }
+        )
 }
 
 @Composable
