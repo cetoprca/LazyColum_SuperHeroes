@@ -27,6 +27,7 @@ import com.example.lazycolum_superheroes.viewmodel.SuperHeroeViewModel
 
 import com.example.recycler_superheroes_compose.ui.components.BottomNavigationBar_SuperHeroe
 import com.example.recycler_superheroes_compose.ui.components.ElementoLazySuperHeroe
+import com.example.recycler_superheroes_compose.ui.components.SwipeableSuperHeroeItem
 import com.example.recycler_superheroes_compose.ui.components.TopAppBar_ActionMode
 import com.example.recycler_superheroes_compose.ui.components.TopAppBar_Normal
 
@@ -63,7 +64,9 @@ fun Pantalla()
 
     //statusBarPadding() deja la barra de estado libre para que
     //no se aplique el color del TopBar
-    Scaffold(modifier = Modifier.fillMaxSize().statusBarsPadding(), topBar ={
+    Scaffold(modifier = Modifier
+        .fillMaxSize()
+        .statusBarsPadding(), topBar ={
         //El ToolBar que se muestra depende si esta activado el action_mode
         if(!action_mode) {
             TopAppBar_Normal(Modifier)
@@ -141,9 +144,10 @@ fun Pantalla()
         {
             DialogoSuperHeroe(superheroeViewModel.superHeroes.get(lista_seleccionados.get(0)),
                 onDismiss = {mostrar_dialogo_editar=false},
-                onGuardar = { superheroe->
+                onGuardar = { superheroe_actualizado->
                     //Guardo los datos del superheroe
-                    superheroeViewModel.superHeroes.get(lista_seleccionados.get(0)).copy(superheroe.nombre, publicador = superheroe.publicador)
+                    superheroeViewModel.actualizarHeroe(superheroeViewModel.superHeroes.get(lista_seleccionados.get(0)),superheroe_actualizado)
+
                     //Cierro el dialogo
                     mostrar_dialogo_editar=false
                     //Vacio la lista de seleccinados
@@ -163,12 +167,14 @@ fun ZonaCentral(modificador: Modifier= Modifier, heroes:List<SuperHeroe>, borrar
     LazyColumn(modifier = modificador.fillMaxSize()) {
         //Mostramos los elementos
         itemsIndexed(heroes){indice,her->
-            ElementoLazySuperHeroe(her,
-                Modifier,
-                selecionado = {esta_seleccionado(indice)},
-                click_borrar = {borrar_superheroe(her)},
-                click_corto = {click_corto_elemento(indice)},
-                click_largo ={ click_largo_elemento(indice)})
+         SwipeableSuperHeroeItem(
+             her,
+             seleccionado = { esta_seleccionado(indice) },
+             on_Editar = {},
+             onBorrar = {  },
+             on_Click = {click_corto_elemento(indice)},
+            on_LongClick={click_largo_elemento(indice)}
+         )
         }
 
 

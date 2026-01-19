@@ -18,4 +18,15 @@ class SuperHeroeViewModel: ViewModel(){
     fun borrarHeroe(heroe: SuperHeroe) {
         superHeroes.remove(heroe)
     }
+
+    fun actualizarHeroe(heroeoriginal: SuperHeroe,heroeactualizado: SuperHeroe)
+    {
+        //voy a buscar el heroeoriginal
+        val indice=superHeroes.indexOf(heroeoriginal)
+        if(indice!=-1)
+        {
+            //Encontrado, actualizo la lista
+            superHeroes[indice]=heroeactualizado
+        }
+    }
 }
