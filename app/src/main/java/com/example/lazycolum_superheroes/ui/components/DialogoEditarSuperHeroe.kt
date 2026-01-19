@@ -17,7 +17,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,7 +25,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
@@ -46,8 +44,8 @@ fun DialogoSuperHeroe(
     onDismiss: () -> Unit,
     onGuardar: (SuperHeroe) -> Unit
 ) {
-    var nombre by remember { mutableStateOf(superHeroe.nombre) }
-    var publicador by remember { mutableStateOf(superHeroe.publicador) }
+    var nombre_editText by remember { mutableStateOf(superHeroe.nombre) }
+    var publicador_editText by remember { mutableStateOf(superHeroe.publicador) }
 
     Dialog(onDismissRequest = onDismiss) {
         // Fondo principal del dialogo
@@ -80,8 +78,8 @@ fun DialogoSuperHeroe(
 
                 // Nombre editable
                 OutlinedTextField(
-                    value = nombre,
-                    onValueChange = { nombre = it },
+                    value = nombre_editText,
+                    onValueChange = { nombre_editText = it },
                     label = { Text("Nombre") },
                     colors = OutlinedTextFieldDefaults.colors(
 
@@ -103,8 +101,8 @@ fun DialogoSuperHeroe(
 
                 // Publicador editable
                 OutlinedTextField(
-                    value = publicador,
-                    onValueChange = { publicador = it },
+                    value = publicador_editText,
+                    onValueChange = { publicador_editText = it },
                     label = { Text("Publicador") },
                     colors = OutlinedTextFieldDefaults.colors(
 
@@ -130,10 +128,10 @@ fun DialogoSuperHeroe(
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     Button(
-                        onClick = { onGuardar(superHeroe.apply {
-                            this.nombre = nombre
-                            this.publicador = publicador
-                        }) },
+                        onClick = {
+                            //Invoco a onGuardar que le pasa por parametro una nueva version del SuperHeroe
+                            //con los datos cambiados de nombre y publicador
+                            onGuardar(superHeroe.copy(nombre = nombre_editText, publicador = publicador_editText))},
                         colors = ButtonDefaults.buttonColors(containerColor = OrangePrimary)
                     ) {
                         Text("Guardar", color = OnOrangePrimary, fontWeight = FontWeight.Bold)

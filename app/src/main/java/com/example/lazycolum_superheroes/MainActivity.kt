@@ -141,9 +141,9 @@ fun Pantalla()
         {
             DialogoSuperHeroe(superheroeViewModel.superHeroes.get(lista_seleccionados.get(0)),
                 onDismiss = {mostrar_dialogo_editar=false},
-                onGuardar = { superheroe->
+                onGuardar = { superheroe_actualizado->
                     //Guardo los datos del superheroe
-                    superheroeViewModel.superHeroes.get(lista_seleccionados.get(0)).copy(superheroe.nombre, publicador = superheroe.publicador)
+                    superheroeViewModel.actualizarHeroe(superheroeViewModel.superHeroes.get(lista_seleccionados.get(0)),superheroe_actualizado)
                     //Cierro el dialogo
                     mostrar_dialogo_editar=false
                     //Vacio la lista de seleccinados
