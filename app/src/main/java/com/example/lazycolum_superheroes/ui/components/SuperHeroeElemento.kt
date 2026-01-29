@@ -1,5 +1,6 @@
 package com.example.recycler_superheroes_compose.ui.components
 
+import android.R
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -42,7 +43,7 @@ import java.nio.file.WatchEvent
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
-fun ElementoLazySuperHeroe(misuperheroe: SuperHeroe, modificador: Modifier= Modifier,selecionado:()->Boolean, click_borrar:()->Unit,click_largo:()->Unit,click_corto:()->Unit)
+fun ElementoLazySuperHeroe(misuperheroe: SuperHeroe, modificador: Modifier= Modifier,selecionado:()->Boolean, click_borrar:()->Unit,click_largo:()->Unit,click_corto:()->Unit, action_mode: Boolean)
 {
 
     val color_fondo=if(selecionado()) MaterialTheme.colorScheme.secondary.copy(alpha = 0.3f) else MaterialTheme.colorScheme.secondary
@@ -61,7 +62,8 @@ fun ElementoLazySuperHeroe(misuperheroe: SuperHeroe, modificador: Modifier= Modi
                 //ocupa todo el espacio restante, necesario que el Colum ocupe todo el tamaño en alto que le permita el card
                 Spacer(modifier = Modifier.weight(1f))
 
-                Button(onClick = {click_borrar()}, modifier = Modifier.padding(bottom = 2.dp), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)) {
+                //He pasado action_mode hasta la tarjeta de superheroe para determinar si el boton de borrar está habilitado o no
+                Button(enabled = !action_mode, onClick = {click_borrar()}, modifier = Modifier.padding(bottom = 2.dp), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)) {
                     Text("BORRAR")
                 }
             }
@@ -76,12 +78,13 @@ fun mostrar_elementoLazy()
 {
     ElementoLazySuperHeroe(
         SuperHeroe(
-        "Spiderman",
-        "Marvel",
-        "Peter Parker",
-        "https://cursokotlin.com/wp-content/uploads/2017/07/spiderman.jpg"
-    ), click_corto = {}, click_largo = {}, click_borrar = {},
+            "Spiderman",
+            "Marvel",
+            "Peter Parker",
+            "https://cursokotlin.com/wp-content/uploads/2017/07/spiderman.jpg"
+        ), click_corto = {}, click_largo = {}, click_borrar = {},
 
-        selecionado = {true}
+        selecionado = { true },
+        action_mode = false
     )
 }

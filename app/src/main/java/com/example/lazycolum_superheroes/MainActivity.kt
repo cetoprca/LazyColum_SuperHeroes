@@ -1,6 +1,7 @@
 package com.example.lazycolum_superheroes
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -29,7 +30,7 @@ import com.example.recycler_superheroes_compose.ui.components.BottomNavigationBa
 import com.example.recycler_superheroes_compose.ui.components.ElementoLazySuperHeroe
 import com.example.recycler_superheroes_compose.ui.components.TopAppBar_ActionMode
 import com.example.recycler_superheroes_compose.ui.components.TopAppBar_Normal
-
+import androidx.compose.runtime.collectAsState
 
 
 class MainActivity : ComponentActivity() {
@@ -53,17 +54,18 @@ class MainActivity : ComponentActivity() {
 fun Pantalla()
 {
     val superheroeViewModel: SuperHeroeViewModel = viewModel()
-    //Variable para controlar si se muestra el Dialogo de editar SuperHeroe
-    var mostrar_dialogo_editar by remember { mutableStateOf(false) }
-    //Definimos una variable para saber si esta activado el menu de acción contextual en el TopBar
-    var action_mode by remember { mutableStateOf(false) }
-    //Defino un listado de elementos seleccionados, solamente su posición
-    val lista_seleccionados=remember { mutableStateListOf<Int>() }
+
+    val action_mode by superheroeViewModel.action_mode.collectAsState()
+    val mostrar_dialogo by superheroeViewModel.mostrar_dialogo.collectAsState()
+    val selectedSuperHeroes by superheroeViewModel.selectedSuperHeroes.collectAsState()
+    val superHeroes by superheroeViewModel.superheroes.collectAsState()
 
 
     //statusBarPadding() deja la barra de estado libre para que
     //no se aplique el color del TopBar
-    Scaffold(modifier = Modifier.fillMaxSize().statusBarsPadding(), topBar ={
+    Scaffold(modifier = Modifier
+        .fillMaxSize()
+        .statusBarsPadding(), topBar ={
         //El ToolBar que se muestra depende si esta activado el action_mode
         if(!action_mode) {
             TopAppBar_Normal(Modifier)
@@ -71,32 +73,31 @@ fun Pantalla()
         else
         {
             TopAppBar_ActionMode(modificador = Modifier,
-                lista_seleccionados.size,
+                selectedSuperHeroes.size,
                 click_atras = {
                     //vacio la lista de seleccionados
-                    lista_seleccionados.clear()
-                    action_mode=false
+                    superheroeViewModel.clearSeleccion()
+                    superheroeViewModel.setActionMode(false)
 
                 },
                 click_editar = {
                     //ABrir un Dialog para editar el elemento seleccionado
                     //Se supone que solo tiene que haber un elemento seleccionado
-                    if(lista_seleccionados.size==1)
+                    if(selectedSuperHeroes.size==1)
                     {
-                      mostrar_dialogo_editar=true
+                        superheroeViewModel.setMostrarDialogo(true)
                     }
 
                 },
                 click_eliminar = {
                     //Tengo que eliminar todos los elementos seleccionados
-                    lista_seleccionados.forEach {
-                        superheroeViewModel.borrarHeroe(superheroeViewModel.superHeroes.get(it))
+                    selectedSuperHeroes.forEach {
+                        superheroeViewModel.borrarHeroe(it)
                     }
                     //Elimino la lista de seleccionados
-                    lista_seleccionados.clear()
+                    superheroeViewModel.clearSeleccion()
                     //Cierro el action_mode
-                    action_mode=false
-
+                    superheroeViewModel.setActionMode(false)
                 })
         }
         },
@@ -104,52 +105,70 @@ fun Pantalla()
 
 
         }) { innerPadding ->
-        ZonaCentral(Modifier.padding(innerPadding),superheroeViewModel.superHeroes,
+        ZonaCentral(Modifier.padding(innerPadding),superHeroes,
             borrar_superheroe = {
-            superheroeViewModel.borrarHeroe(it)
+                // Evitar que se pueda borrar usando el boton de la card si action mode está habilitado
+                // Esto es un fallback en caso de que falle por algun motivo el deshabilitado del boton
+            if (!action_mode){
+                superheroeViewModel.borrarHeroe(it)
+            }
         },
             click_corto_elemento = {
                 if(action_mode)
                 {
                     //Añado el elemento a la lista de seleccionados,si no esta seleccionado previamente
-                    if(lista_seleccionados.contains(it))
+                    if(superheroeViewModel.isHeroeSeleccionado(it))
                     {
                         //El elemento ya se ha añadido a la lista lo que hago es eliminarlo
-                        lista_seleccionados.remove(it)
+                        Log.i("INFO", "antes deselect ${System.identityHashCode(superheroeViewModel.selectedSuperHeroes.value)}")
+
+                        superheroeViewModel.deseleccionarHeroe(it)
+
+                        Log.i("INFO", "despues deselect ${System.identityHashCode(superheroeViewModel.selectedSuperHeroes.value)}")
+
                         //Si ademas ya no hay elementos seleccionados cierro el action_mode
-                        if(lista_seleccionados.size==0)
-                            action_mode=false
+                        if(superheroeViewModel.isSeleccionEmpty())
+                            superheroeViewModel.setActionMode(false)
                     }
                     else {
                         //Si no lo añado
-                        lista_seleccionados.add(it)
+
+                        Log.i("INFO", "antes select ${System.identityHashCode(superheroeViewModel.selectedSuperHeroes.value)}")
+                        superheroeViewModel.seleccionarHeroe(it)
+
+                        Log.i("INFO", "despues select ${System.identityHashCode(superheroeViewModel.selectedSuperHeroes.value)}")
                     }
                 }
 
             },
-            click_largo_elemento = {indice_elemento->
+            click_largo_elemento = {heroe->
                 if(!action_mode)
                 {
-                    action_mode=true
-                    lista_seleccionados.add(indice_elemento)
+                    superheroeViewModel.setActionMode(true)
+                    superheroeViewModel.seleccionarHeroe(heroe)
                 }
             },
-            esta_seleccionado = {indice->
-                lista_seleccionados.contains(indice)
-            })
-        if(mostrar_dialogo_editar)
+            esta_seleccionado = {heroe->
+                for (heroeinterno in superheroeViewModel.selectedSuperHeroes.value){
+                    Log.i("Info", "${heroeinterno == heroe} ${heroeinterno.equals(heroe)}")
+                }
+                superheroeViewModel.selectedSuperHeroes.value.contains(heroe)
+            },
+            action_mode = action_mode)
+        if(mostrar_dialogo)
         {
-            DialogoSuperHeroe(superheroeViewModel.superHeroes.get(lista_seleccionados.get(0)),
-                onDismiss = {mostrar_dialogo_editar=false},
+            DialogoSuperHeroe(
+                selectedSuperHeroes[0],
+                onDismiss = {superheroeViewModel.setMostrarDialogo(false)},
                 onGuardar = { superheroe_actualizado->
                     //Guardo los datos del superheroe
-                    superheroeViewModel.actualizarHeroe(superheroeViewModel.superHeroes.get(lista_seleccionados.get(0)),superheroe_actualizado)
+                    superheroeViewModel.actualizarHeroe(selectedSuperHeroes[0],superheroe_actualizado)
                     //Cierro el dialogo
-                    mostrar_dialogo_editar=false
+                    superheroeViewModel.setMostrarDialogo(false)
                     //Vacio la lista de seleccinados
-                    lista_seleccionados.clear()
+                    superheroeViewModel.clearSeleccion()
                     //Salgo del action_mode
-                    action_mode=false
+                    superheroeViewModel.setActionMode(false)
                 })
         }
     }
@@ -157,18 +176,21 @@ fun Pantalla()
 
 
 @Composable
-fun ZonaCentral(modificador: Modifier= Modifier, heroes:List<SuperHeroe>, borrar_superheroe:(SuperHeroe)->Unit,click_corto_elemento:(Int)->Unit,click_largo_elemento:(Int)->Unit,esta_seleccionado:(Int)->Boolean)
+fun ZonaCentral(modificador: Modifier= Modifier, heroes:List<SuperHeroe>, borrar_superheroe:(SuperHeroe)->Unit, click_corto_elemento:(SuperHeroe)->Unit, click_largo_elemento:(SuperHeroe)->Unit, esta_seleccionado:(SuperHeroe)->Boolean, action_mode: Boolean)
 {
 
     LazyColumn(modifier = modificador.fillMaxSize()) {
         //Mostramos los elementos
         itemsIndexed(heroes){indice,her->
-            ElementoLazySuperHeroe(her,
+            ElementoLazySuperHeroe(
+                her,
                 Modifier,
-                selecionado = {esta_seleccionado(indice)},
-                click_borrar = {borrar_superheroe(her)},
-                click_corto = {click_corto_elemento(indice)},
-                click_largo ={ click_largo_elemento(indice)})
+                selecionado = { esta_seleccionado(heroes[indice]) },
+                click_borrar = { borrar_superheroe(her) },
+                click_corto = { click_corto_elemento(heroes[indice]) },
+                click_largo = { click_largo_elemento(heroes[indice]) },
+                action_mode = action_mode
+            )
         }
 
 
