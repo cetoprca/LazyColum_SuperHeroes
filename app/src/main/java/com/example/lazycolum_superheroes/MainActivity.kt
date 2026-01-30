@@ -1,7 +1,6 @@
 package com.example.lazycolum_superheroes
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -9,75 +8,65 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.lazycolum_superheroes.model.SuperHeroe
 import com.example.lazycolum_superheroes.ui.components.DialogoSuperHeroe
 import com.example.lazycolum_superheroes.ui.theme.LazyColumn_SuperHeroes_composeTheme
 import com.example.lazycolum_superheroes.viewmodel.SuperHeroeViewModel
-
 import com.example.recycler_superheroes_compose.ui.components.BottomNavigationBar_SuperHeroe
 import com.example.recycler_superheroes_compose.ui.components.ElementoLazySuperHeroe
 import com.example.recycler_superheroes_compose.ui.components.TopAppBar_ActionMode
 import com.example.recycler_superheroes_compose.ui.components.TopAppBar_Normal
-import androidx.compose.runtime.collectAsState
 
 
 class MainActivity : ComponentActivity() {
-    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
         setContent {
-
            LazyColumn_SuperHeroes_composeTheme {
-
-              Pantalla()
+               Pantalla()
             }
         }
     }
 }
 
-
 @Composable
-fun Pantalla()
-{
-    val superheroeViewModel: SuperHeroeViewModel = viewModel()
+fun Pantalla(viewModel : SuperHeroeViewModel = viewModel()) {
 
-    val action_mode by superheroeViewModel.action_mode.collectAsState()
-    val mostrar_dialogo by superheroeViewModel.mostrar_dialogo.collectAsState()
-    val selectedSuperHeroes by superheroeViewModel.selectedSuperHeroes.collectAsState()
-    val superHeroes by superheroeViewModel.superheroes.collectAsState()
+    val navController = rememberNavController()
+
+    val actionMode by viewModel.actionMode.collectAsState()
+    val mostrarDialogo by viewModel.mostrarDialogo.collectAsState()
+    val selectedSuperHeroes by viewModel.selectedSuperHeroes.collectAsState()
+    val favoriteSuperHeroes by viewModel.favoriteSuperHeroes.collectAsState()
+    val superHeroes by viewModel.superheroes.collectAsState()
 
 
-    //statusBarPadding() deja la barra de estado libre para que
-    //no se aplique el color del TopBar
     Scaffold(modifier = Modifier
         .fillMaxSize()
         .statusBarsPadding(), topBar ={
         //El ToolBar que se muestra depende si esta activado el action_mode
-        if(!action_mode) {
+        if(!actionMode) {
             TopAppBar_Normal(Modifier)
         }
         else
         {
-            TopAppBar_ActionMode(modificador = Modifier,
+            TopAppBar_ActionMode(modifier = Modifier,
                 selectedSuperHeroes.size,
                 click_atras = {
                     //vacio la lista de seleccionados
-                    superheroeViewModel.clearSeleccion()
-                    superheroeViewModel.setActionMode(false)
+                    viewModel.clearSeleccion()
+                    viewModel.setActionMode(false)
 
                 },
                 click_editar = {
@@ -85,98 +74,91 @@ fun Pantalla()
                     //Se supone que solo tiene que haber un elemento seleccionado
                     if(selectedSuperHeroes.size==1)
                     {
-                        superheroeViewModel.setMostrarDialogo(true)
+                        viewModel.setMostrarDialogo(true)
                     }
 
                 },
                 click_eliminar = {
                     //Tengo que eliminar todos los elementos seleccionados
                     selectedSuperHeroes.forEach {
-                        superheroeViewModel.borrarHeroe(it)
+                        viewModel.borrarHeroe(it)
                     }
                     //Elimino la lista de seleccionados
-                    superheroeViewModel.clearSeleccion()
+                    viewModel.clearSeleccion()
                     //Cierro el action_mode
-                    superheroeViewModel.setActionMode(false)
+                    viewModel.setActionMode(false)
                 })
         }
-        },
-        bottomBar = {BottomNavigationBar_SuperHeroe()
+    },
+        bottomBar = {BottomNavigationBar_SuperHeroe(navController)
 
 
-        }) { innerPadding ->
-        ZonaCentral(Modifier.padding(innerPadding),superHeroes,
-            borrar_superheroe = {
-                // Evitar que se pueda borrar usando el boton de la card si action mode está habilitado
-                // Esto es un fallback en caso de que falle por algun motivo el deshabilitado del boton
-            if (!action_mode){
-                superheroeViewModel.borrarHeroe(it)
+        }
+    ) { innerPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = "inicio"
+        ){
+            composable(route = "inicio") {
+                ZonaCentral(Modifier.padding(innerPadding),superHeroes,
+                    borrar_superheroe = { viewModel.borrarHeroe(it) },
+                    click_corto_elemento = { viewModel.seleccionarHeroe(it) },
+                    click_largo_elemento = {heroe-> viewModel.seleccionarHeroe(heroe) },
+                    esta_seleccionado = { selectedSuperHeroes.contains(it) },
+                    click_favorito = { viewModel.toggleFavorito(it)},
+                    es_favorito = { favoriteSuperHeroes.contains(it) },
+                    action_mode = actionMode)
+                if(mostrarDialogo)
+                {
+                    DialogoSuperHeroe(
+                        selectedSuperHeroes[0],
+                        onDismiss = {viewModel.setMostrarDialogo(false)},
+                        onGuardar = { superheroe_actualizado->
+                            //Guardo los datos del superheroe
+                            viewModel.actualizarHeroe(selectedSuperHeroes[0],superheroe_actualizado)
+                            //Cierro el dialogo
+                            viewModel.setMostrarDialogo(false)
+                            //Vacio la lista de seleccinados
+                            viewModel.clearSeleccion()
+                            //Salgo del action_mode
+                            viewModel.setActionMode(false)
+                        })
+                }
             }
-        },
-            click_corto_elemento = {
-                if(action_mode)
+
+            composable(route = "favoritos") {
+                ZonaCentral(Modifier.padding(innerPadding),favoriteSuperHeroes,
+                    borrar_superheroe = { viewModel.borrarHeroe(it) },
+                    click_corto_elemento = { viewModel.seleccionarHeroe(it) },
+                    click_largo_elemento = { viewModel.seleccionarHeroe(it) },
+                    esta_seleccionado = { selectedSuperHeroes.contains(it) },
+                    click_favorito = { viewModel.toggleFavorito(it) },
+                    es_favorito = { favoriteSuperHeroes.contains(it) },
+                    action_mode = actionMode)
+                if(mostrarDialogo)
                 {
-                    //Añado el elemento a la lista de seleccionados,si no esta seleccionado previamente
-                    if(superheroeViewModel.isHeroeSeleccionado(it))
-                    {
-                        //El elemento ya se ha añadido a la lista lo que hago es eliminarlo
-                        Log.i("INFO", "antes deselect ${System.identityHashCode(superheroeViewModel.selectedSuperHeroes.value)}")
-
-                        superheroeViewModel.deseleccionarHeroe(it)
-
-                        Log.i("INFO", "despues deselect ${System.identityHashCode(superheroeViewModel.selectedSuperHeroes.value)}")
-
-                        //Si ademas ya no hay elementos seleccionados cierro el action_mode
-                        if(superheroeViewModel.isSeleccionEmpty())
-                            superheroeViewModel.setActionMode(false)
-                    }
-                    else {
-                        //Si no lo añado
-
-                        Log.i("INFO", "antes select ${System.identityHashCode(superheroeViewModel.selectedSuperHeroes.value)}")
-                        superheroeViewModel.seleccionarHeroe(it)
-
-                        Log.i("INFO", "despues select ${System.identityHashCode(superheroeViewModel.selectedSuperHeroes.value)}")
-                    }
+                    DialogoSuperHeroe(
+                        selectedSuperHeroes[0],
+                        onDismiss = {viewModel.setMostrarDialogo(false)},
+                        onGuardar = { superheroe_actualizado->
+                            //Guardo los datos del superheroe
+                            viewModel.actualizarHeroe(selectedSuperHeroes[0],superheroe_actualizado)
+                            //Cierro el dialogo
+                            viewModel.setMostrarDialogo(false)
+                            //Vacio la lista de seleccinados
+                            viewModel.clearSeleccion()
+                            //Salgo del action_mode
+                            viewModel.setActionMode(false)
+                        })
                 }
-
-            },
-            click_largo_elemento = {heroe->
-                if(!action_mode)
-                {
-                    superheroeViewModel.setActionMode(true)
-                    superheroeViewModel.seleccionarHeroe(heroe)
-                }
-            },
-            esta_seleccionado = {heroe->
-                for (heroeinterno in superheroeViewModel.selectedSuperHeroes.value){
-                    Log.i("Info", "${heroeinterno == heroe} ${heroeinterno.equals(heroe)}")
-                }
-                superheroeViewModel.selectedSuperHeroes.value.contains(heroe)
-            },
-            action_mode = action_mode)
-        if(mostrar_dialogo)
-        {
-            DialogoSuperHeroe(
-                selectedSuperHeroes[0],
-                onDismiss = {superheroeViewModel.setMostrarDialogo(false)},
-                onGuardar = { superheroe_actualizado->
-                    //Guardo los datos del superheroe
-                    superheroeViewModel.actualizarHeroe(selectedSuperHeroes[0],superheroe_actualizado)
-                    //Cierro el dialogo
-                    superheroeViewModel.setMostrarDialogo(false)
-                    //Vacio la lista de seleccinados
-                    superheroeViewModel.clearSeleccion()
-                    //Salgo del action_mode
-                    superheroeViewModel.setActionMode(false)
-                })
+            }
         }
+
     }
 }
 
-
 @Composable
-fun ZonaCentral(modificador: Modifier= Modifier, heroes:List<SuperHeroe>, borrar_superheroe:(SuperHeroe)->Unit, click_corto_elemento:(SuperHeroe)->Unit, click_largo_elemento:(SuperHeroe)->Unit, esta_seleccionado:(SuperHeroe)->Boolean, action_mode: Boolean)
+fun ZonaCentral(modificador: Modifier= Modifier, heroes:List<SuperHeroe>, borrar_superheroe:(SuperHeroe)->Unit, click_corto_elemento:(SuperHeroe)->Unit, click_largo_elemento:(SuperHeroe)->Unit, click_favorito:(SuperHeroe)->Unit, esta_seleccionado:(SuperHeroe)->Boolean, es_favorito:(SuperHeroe)->Boolean, action_mode: Boolean)
 {
 
     LazyColumn(modifier = modificador.fillMaxSize()) {
@@ -186,13 +168,13 @@ fun ZonaCentral(modificador: Modifier= Modifier, heroes:List<SuperHeroe>, borrar
                 her,
                 Modifier,
                 selecionado = { esta_seleccionado(heroes[indice]) },
+                favorito = { es_favorito(heroes[indice]) },
                 click_borrar = { borrar_superheroe(her) },
                 click_corto = { click_corto_elemento(heroes[indice]) },
                 click_largo = { click_largo_elemento(heroes[indice]) },
+                click_favorito = { click_favorito(heroes[indice]) },
                 action_mode = action_mode
             )
         }
-
-
     }
 }

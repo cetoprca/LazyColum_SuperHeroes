@@ -4,7 +4,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
@@ -18,7 +17,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,7 +29,7 @@ import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopAppBar_Normal(modificador: Modifier= Modifier)
+fun TopAppBar_Normal(modifier: Modifier = Modifier)
 {
     var menu_expandido by remember { mutableStateOf(false) }
     TopAppBar(
@@ -53,7 +51,7 @@ fun TopAppBar_Normal(modificador: Modifier= Modifier)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopAppBar_ActionMode(modificador: Modifier= Modifier,elementos_seleccionados:Int,click_atras:()->Unit,click_eliminar:()->Unit,click_editar: ()->Unit)
+fun TopAppBar_ActionMode(modifier: Modifier,  elementos_seleccionados:Int,click_atras:()->Unit,click_eliminar:()->Unit,click_editar: ()->Unit)
 {
     TopAppBar(
         title = {Text("Elementos seleccionados $elementos_seleccionados", fontSize = 16.sp)},
